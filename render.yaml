@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: autter-runtime-demo
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true

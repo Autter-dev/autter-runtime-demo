@@ -23,6 +23,18 @@ Open `http://localhost:3000` and click the buttons, or call the routes directly.
 | `POST /api/checkout?declined=1` | 402 |
 | `POST /api/checkout?sku=ABC` | 409 |
 
+## Deploy on Render
+
+The repo includes a [`render.yaml`](render.yaml) Blueprint. In Render, choose
+**New → Blueprint**, connect this repository and deploy, or create a **Web Service**
+by hand with build command `npm install`, start command `npm start` and health
+check path `/healthz`.
+
+Render sets `RENDER_GIT_COMMIT` on every git-backed deploy, and Autter Runtime
+reads it automatically, so the deployed commit is reported with no extra
+configuration. On other hosts, set `GIT_SHA` or `AUTTER_COMMIT` to the deployed
+commit where the service runs.
+
 ## Add Autter Runtime
 
 ### 1. Start an ingester

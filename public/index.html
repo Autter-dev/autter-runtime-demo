@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autter Runtime demo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #111; }
+    h1 { font-size: 22px; }
+    button { margin: 4px 6px 4px 0; padding: 8px 12px; cursor: pointer; }
+    pre { background: #f4f4f5; padding: 12px; border-radius: 6px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Autter Runtime demo</h1>
+  <p>Each button produces telemetry. Check your ingester or dashboard afterwards.</p>
+
+  <h2>Server</h2>
+  <button data-call="/api/ok">OK request</button>
+  <button data-call="/api/users/42">User route</button>
+  <button data-call="/api/slow">Slow request</button>
+  <button data-call="/api/flaky">Flaky request</button>
+  <button data-call="/api/boom">Server bug (500)</button>
+  <button data-call="/api/checkout?declined=1" method="POST">Coded error 402</button>
+  <button data-call="/api/checkout?sku=ABC" method="POST">Coded error 409</button>
+
+  <h2>Browser</h2>
+  <button id="throw-btn">Throw uncaught error</button>
+  <button id="capture-btn">Capture handled error</button>
+  <button id="track-btn">Track event</button>
+  <button id="fetch-fail-btn">Fetch failing endpoint</button>
+
+  <h2>Result</h2>
+  <pre id="out">Click a button.</pre>
+
+  <script type="module">
+    import * as autter from "/vendor/index.js";
+
+    const out = document.getElementById("out");
+    const show = (label, value) => { out.textContent = label + "\n" + value; };
+
+    // The browser SDK posts through the same-origin relay: no key in the page.
+    autter.initAutterBrowser({
+      endpoint: "/api/autter-runtime",
+      service: "autter-runtime-demo-web",
+      release: "dev",
+    });
+
+    document.querySelectorAll("button[data-call]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const path = btn.dataset.call;
+        const method = btn.getAttribute("method") || "GET";
+        try {
+          const res = await fetch(path, { method, headers: { "content-type": "application/json" }, body: method === "POST" ? "{}" : undefined });
+          show(`${method} ${path} -> ${res.status}`, await res.text());
+        } catch (err) {
+          show(`${method} ${path} failed`, String(err));
+        }
+      });
+    });
+
+    document.getElementById("throw-btn").addEventListener("click", () => {
+      setTimeout(() => { throw new Error("demo uncaught browser error"); }, 0);
+    });
+    document.getElementById("capture-btn").addEventListener("click", () => {
+      try { null.boom; } catch (err) {
+        autter.captureException?.(err, { operation: "demo-handled" });
+        show("captureException", String(err));
+      }
+    });
+    document.getElementById("track-btn").addEventListener("click", () => {
+      autter.trackEvent?.("demo_clicked_track");
+      show("trackEvent", "demo_clicked_track sent (if the SDK loaded)");
+    });
+    document.getElementById("fetch-fail-btn").addEventListener("click", async () => {
+      const res = await fetch("/api/boom").catch((err) => ({ status: err.message }));
+      show("fetch /api/boom", String(res.status));
+    });
+  </script>
+</body>
+</html>

@@ -2,7 +2,7 @@
   "name": "autter-runtime-demo",
   "private": true,
   "version": "0.1.0",
-  "description": "Demo Express server instrumented with @autter/runtime-node for testing Autter Runtime",
+  "description": "Plain Express demo app showing how to add Autter Runtime to a Node.js project",
   "type": "module",
   "scripts": {
     "start": "node server.js"
@@ -11,8 +11,6 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@autter/runtime-browser": "^1.8.1",
-    "@autter/runtime-node": "^1.13.0",
     "express": "^4.21.2"
   }
 }
